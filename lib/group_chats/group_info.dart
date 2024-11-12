@@ -96,29 +96,77 @@ class _GroupInfoState extends State<GroupInfo> {
   }
 
   Future onLeaveGroup() async {
-    if (!checkAdmin()) {
-      setState(() {
-        isLoading = true;
-      });
+    setState(() {
+      isLoading = true;
+    });
 
+    // Periksa apakah admin adalah satu-satunya anggota grup
+    if (membersList.length == 1 &&
+        membersList[0]['uid'] == _auth.currentUser!.uid) {
+      try {
+        // Hapus dokumen grup dari Firestore
+        await _firestore.collection('groups').doc(widget.groupId).delete();
+
+        // Hapus referensi grup dari koleksi 'groups' di pengguna admin
+        await _firestore
+            .collection('users')
+            .doc(_auth.currentUser!.uid)
+            .collection('groups')
+            .doc(widget.groupId)
+            .delete();
+
+        // Navigasi kembali ke HomeScreen
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => HomeScreen()),
+            (route) => false,
+          );
+        }
+      } catch (e) {
+        print("Error saat menghapus grup: $e");
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } else {
+      // Hapus admin dari daftar anggota
       membersList
           .removeWhere((member) => member['uid'] == _auth.currentUser!.uid);
 
-      await _firestore.collection('groups').doc(widget.groupId).update({
-        "members": membersList,
-      });
+      if (checkAdmin() && membersList.isNotEmpty) {
+        // Tetapkan anggota pertama di daftar sebagai admin baru
+        membersList[0]['isAdmin'] = true;
+      }
 
-      await _firestore
-          .collection('users')
-          .doc(_auth.currentUser!.uid)
-          .collection('groups')
-          .doc(widget.groupId)
-          .delete();
+      try {
+        // Perbarui daftar anggota di Firestore
+        await _firestore.collection('groups').doc(widget.groupId).update({
+          "members": membersList,
+        });
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => HomeScreen()),
-        (route) => false,
-      );
+        // Hapus grup dari daftar grup pengguna
+        await _firestore
+            .collection('users')
+            .doc(_auth.currentUser!.uid)
+            .collection('groups')
+            .doc(widget.groupId)
+            .delete();
+
+        // Navigasi kembali ke HomeScreen
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => HomeScreen()),
+            (route) => false,
+          );
+        }
+      } catch (e) {
+        print("Error saat meninggalkan grup: $e");
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 

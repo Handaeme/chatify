@@ -1,12 +1,10 @@
 import 'package:chatify/Authentication.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-// Inisialisasi notifikasi lokal
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+import 'firebase_messaging_service.dart'; // Import FirebaseCM yang telah dibuat
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Handler untuk menangani pesan saat aplikasi berada di background
@@ -17,50 +15,52 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  FirebaseMessaging messaging = FirebaseMessaging.instance;
-
-  // Mendapatkan token FCM perangkat
-  String? token = await messaging.getToken();
-  print("FCM Token: $token");
+  // Inisialisasi FirebaseCM
+  FirebaseCM firebaseCM = FirebaseCM();
+  await firebaseCM.initNotification(); // Menginisialisasi notifikasi
+  firebaseCM
+      .listenToMessages(); // Mendengarkan pesan saat aplikasi di foreground
 
   // Menangani notifikasi saat aplikasi di background
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // Konfigurasi notifikasi lokal
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
-  final InitializationSettings initializationSettings =
-      InitializationSettings(android: initializationSettingsAndroid);
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  // Mendapatkan token FCM perangkat
+  String? token = await FirebaseMessaging.instance.getToken();
+  print("FCM Token: $token");
 
-  // Menangani notifikasi saat aplikasi di foreground
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    if (message.notification != null) {
-      flutterLocalNotificationsPlugin.show(
-        0,
-        message.notification!.title,
-        message.notification!.body,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            'channel_id',
-            'channel_name',
-            importance: Importance.max,
-            priority: Priority.high,
-          ),
-        ),
-      );
-    }
-  });
+  // Mendapatkan accessToken secara async
+  User? user = FirebaseAuth.instance.currentUser;
 
-  runApp(MyApp());
+  // Memastikan bahwa kita menggunakan await dan menangani kemungkinan nilai null
+  String accessToken = user != null
+      ? (await user.getIdToken()) ??
+          "default_access_token" // Tangani kemungkinan null
+      : "default_access_token"; // Gunakan nilai default jika user null
+
+  // Jalankan aplikasi setelah semua async selesai
+  runApp(MyApp(
+    fcmToken: token,
+    accessToken: accessToken,
+  ));
 }
 
 class MyApp extends StatelessWidget {
+  final String? fcmToken;
+  final String accessToken; // Tambahkan accessToken
+
+  MyApp({
+    required this.fcmToken,
+    required this.accessToken,
+  });
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Authentication(),
+      home: Authentication(
+        fcmToken: fcmToken, // Pass FCM token to Authentication
+        accessToken: accessToken, // Pass accessToken to Authentication
+      ),
     );
   }
 }
