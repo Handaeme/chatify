@@ -29,6 +29,7 @@ class _ChatRoomState extends State<ChatRoom> {
   File? imageFile;
   bool isUploading = false;
 
+  // Memilih gambar dari galeri
   Future<void> getImage() async {
     ImagePicker _picker = ImagePicker();
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -41,11 +42,21 @@ class _ChatRoomState extends State<ChatRoom> {
     }
   }
 
+  // Mengunggah gambar ke Firebase Storage
   Future<void> uploadImage() async {
+    if (imageFile == null || !imageFile!.existsSync()) {
+      print("File gambar tidak ditemukan.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content:
+                Text("Image file not found. Please select an image again.")),
+      );
+      return;
+    }
+
     String fileName = Uuid().v1();
     try {
-      var ref =
-          FirebaseStorage.instance.ref().child('images').child("$fileName.jpg");
+      var ref = FirebaseStorage.instance.ref().child('images/$fileName.jpg');
       var uploadTask = await ref.putFile(imageFile!);
       String imageUrl = await uploadTask.ref.getDownloadURL();
 
@@ -75,44 +86,57 @@ class _ChatRoomState extends State<ChatRoom> {
         isUploading = false;
       });
       print("Error uploading image: $error");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to upload image. Please try again.")),
+      );
     }
   }
 
+  // Mengirim pesan teks
   Future<void> onSendMessage() async {
-    if (_message.text.trim().isNotEmpty) {
-      try {
-        String messageText = _message.text.trim();
-        Map<String, dynamic> messages = {
-          "sendby": _auth.currentUser!.uid,
-          "message": messageText,
-          "type": "text",
-          "time": FieldValue.serverTimestamp(),
-        };
+    if (_message.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Message cannot be empty.")),
+      );
+      return;
+    }
 
-        _message.clear();
+    try {
+      String messageText = _message.text.trim();
+      Map<String, dynamic> messages = {
+        "sendby": _auth.currentUser!.uid,
+        "message": messageText,
+        "type": "text",
+        "time": FieldValue.serverTimestamp(),
+      };
 
-        await _firestore
-            .collection('chatRooms')
-            .doc(widget.chatRoomId)
-            .collection('chats')
-            .add(messages);
+      _message.clear(); // Bersihkan input field setelah teks diambil
 
-        await updateLastMessage(messageText);
+      await _firestore
+          .collection('chatRooms')
+          .doc(widget.chatRoomId)
+          .collection('chats')
+          .add(messages);
 
-        final fcmToken = widget.userMap['fcmToken'];
-        if (fcmToken != null) {
-          await _pushNotificationService.sendNotification(
-              fcmToken, 'New Message', messageText);
-        }
-      } catch (e) {
-        print("Error sending message: $e");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to send message")),
+      await updateLastMessage(messageText);
+
+      final fcmToken = widget.userMap['fcmToken'];
+      if (fcmToken != null) {
+        await _pushNotificationService.sendNotification(
+          fcmToken,
+          'New Message',
+          messageText,
         );
       }
+    } catch (e) {
+      print("Error sending message: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to send message. Please try again.")),
+      );
     }
   }
 
+  // Memperbarui pesan terakhir di chatroom
   Future<void> updateLastMessage(String messageText) async {
     final chatRoomRef =
         _firestore.collection('chatRooms').doc(widget.chatRoomId);
@@ -253,6 +277,9 @@ class _ChatRoomState extends State<ChatRoom> {
                               contentPadding: EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 14),
                             ),
+                            autocorrect: false, // Menambahkan properti ini
+                            textInputAction: TextInputAction.send,
+                            onSubmitted: (_) => onSendMessage(),
                           ),
                         ),
                         IconButton(

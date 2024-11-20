@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+
+//Tidak digunakan lagi akan dihapus
 class FirebaseCM {
   final FirebaseMessaging firebaseMessaging = FirebaseMessaging.instance;
   final AndroidNotificationChannel channel = const AndroidNotificationChannel(

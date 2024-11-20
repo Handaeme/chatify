@@ -1,4 +1,3 @@
-import 'package:chatify/Authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -6,72 +5,52 @@ import 'package:flutter/material.dart';
 
 import 'HomeScreen.dart'; // Import HomeScreen untuk daftar obrolan
 import 'LoginScreen.dart'; // Import LoginScreen untuk halaman login
-import 'firebase_messaging_service.dart'; // Import FirebaseCM yang telah dibuat
+import 'push_notification_service.dart'; // Import PushNotificationService
 
-// Handler untuk menangani pesan saat aplikasi berada di background
+// Handler untuk pesan background
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('Handling a background message: ${message.messageId}');
+  // Anda dapat menambahkan logika untuk menyimpan notifikasi ke local storage di sini jika diperlukan.
 }
 
 Future<void> main() async {
-  // Inisialisasi widget Flutter dan Firebase
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
-  // Inisialisasi Firebase Cloud Messaging Service
-  FirebaseCM firebaseCM = FirebaseCM();
-  await firebaseCM.initNotification(); // Inisialisasi notifikasi
-  firebaseCM.listenToMessages(); // Mendengarkan pesan di foreground
-
-  // Menangani pesan saat aplikasi di background
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-  // Mendapatkan token FCM perangkat
-  String? fcmToken = await FirebaseMessaging.instance.getToken();
-  print("FCM Token: $fcmToken");
+  PushNotificationService pushNotificationService = PushNotificationService();
+  await pushNotificationService.initialize();
 
-  // Mendapatkan token autentikasi pengguna
-  String? accessToken = await _getAccessToken();
+  User? currentUser = FirebaseAuth.instance.currentUser;
 
-  // Jalankan aplikasi
-  runApp(MyApp(
-    fcmToken: fcmToken,
-    accessToken: accessToken,
-  ));
-}
+  if (currentUser != null) {
+    String userId = currentUser.uid;
+    String? token = await pushNotificationService.getFcmToken();
 
-// Fungsi untuk mendapatkan token autentikasi pengguna
-Future<String?> _getAccessToken() async {
-  User? user = FirebaseAuth.instance.currentUser;
-  if (user != null) {
-    return await user.getIdToken();
+    if (token != null) {
+      await pushNotificationService.saveTokenToFirestore(userId);
+      print("Token FCM diperbarui untuk userId: $userId");
+    }
+
+    pushNotificationService.listenToTokenRefresh(userId);
+  } else {
+    print("Pengguna belum login.");
   }
-  return null; // Kembalikan null jika pengguna belum login
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final String? fcmToken;
-  final String? accessToken;
-
-  MyApp({
-    required this.fcmToken,
-    required this.accessToken,
-  });
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: FirebaseAuth.instance.currentUser != null
-          ? '/home' // Jika pengguna sudah login, langsung ke home
-          : '/login', // Jika belum login, ke halaman login
+      initialRoute:
+          FirebaseAuth.instance.currentUser != null ? '/home' : '/login',
       routes: {
-        '/auth': (context) => Authentication(
-              fcmToken: fcmToken,
-              accessToken: accessToken ?? "default_access_token",
-            ),
-        '/home': (context) => HomeScreen(), // Halaman utama
-        '/login': (context) => LoginScreen(), // Halaman login
+        '/home': (context) => HomeScreen(),
+        '/login': (context) => LoginScreen(),
       },
       onUnknownRoute: (settings) {
         return MaterialPageRoute(

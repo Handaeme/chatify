@@ -1,61 +1,106 @@
-import 'package:chatify/HomeScreen.dart';
-import 'package:chatify/SplashScreen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart'; // Inisialisasi Firebase
-import 'package:flutter/material.dart';
 
-class Authentication extends StatelessWidget {
+class Authentication {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final String accessToken; // Parameter accessToken
-  final String? fcmToken; // Parameter fcmToken
 
-  // Konstruktor untuk menerima accessToken dan fcmToken
-  Authentication({required this.accessToken, this.fcmToken});
+  // Fungsi untuk registrasi pengguna baru
+  Future<void> registerUser(String name, String email, String password) async {
+    try {
+      // Mendaftar pengguna baru dengan email dan password
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: Firebase.initializeApp(), // Inisialisasi Firebase
-      builder: (context, snapshot) {
-        // Saat menunggu inisialisasi Firebase
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(), // Loading indicator
-            ),
-          );
-        }
+      String? userId = userCredential.user?.uid;
+      if (userId != null) {
+        print("User ID berhasil dibuat: $userId");
 
-        // Jika ada error saat inisialisasi Firebase
-        if (snapshot.hasError) {
-          return Scaffold(
-            body: Center(
-              child: Text('Error: ${snapshot.error}'), // Tampilkan pesan error
-            ),
-          );
-        }
+        // Simpan data pengguna ke Firestore
+        await FirebaseFirestore.instance.collection('users').doc(userId).set({
+          'uid': userId,
+          'name': name,
+          'email': email,
+          'status': 'Online',
+        }, SetOptions(merge: true));
+        print("Data pengguna berhasil disimpan di Firestore.");
+      } else {
+        print("Error: User ID kosong setelah registrasi.");
+      }
+    } catch (e) {
+      print("Error saat registrasi: $e");
+    }
+  }
 
-        // Jika inisialisasi berhasil
-        if (snapshot.connectionState == ConnectionState.done) {
-          // Menggunakan accessToken dan fcmToken jika diperlukan
-          print("Access Token: $accessToken");
-          print("FCM Token: $fcmToken");
+  // Fungsi untuk login pengguna
+  Future<void> loginUser(String email, String password) async {
+    try {
+      // Login pengguna dengan email dan password
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-          // Periksa apakah pengguna sudah login
-          if (_auth.currentUser != null) {
-            return HomeScreen(); // Jika sudah login, arahkan ke HomeScreen
-          } else {
-            return SplashScreen(); // Jika belum login, arahkan ke SplashScreen
-          }
-        }
+      String? userId = userCredential.user?.uid;
+      if (userId != null) {
+        print("User ID login: $userId");
 
-        // Default, jika tidak ada kondisi terpenuhi
-        return Scaffold(
-          body: Center(
-            child: Text("Something went wrong."), // Pesan error default
-          ),
-        );
-      },
-    );
+        // Perbarui status pengguna menjadi Online
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .update({
+          'status': 'Online',
+        });
+        print("Status pengguna berhasil diperbarui di Firestore.");
+      } else {
+        print("Error: User ID kosong saat login.");
+      }
+    } catch (e) {
+      print("Error saat login: $e");
+    }
+  }
+
+  // Fungsi untuk logout pengguna
+  Future<void> logoutUser() async {
+    try {
+      String? userId = _auth.currentUser?.uid;
+      if (userId != null) {
+        print("User ID logout: $userId");
+
+        // Perbarui status pengguna menjadi Offline
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .update({'status': 'Offline'});
+        print("Status diperbarui menjadi Offline.");
+      } else {
+        print("Error: User ID tidak ditemukan saat logout.");
+      }
+
+      await _auth.signOut();
+      print("User berhasil logout.");
+    } catch (e) {
+      print("Error saat logout: $e");
+    }
+  }
+
+  // Fungsi opsional untuk mendapatkan token autentikasi pengguna
+  Future<String?> getAuthToken() async {
+    try {
+      User? user = _auth.currentUser;
+      if (user != null) {
+        String? token = await user.getIdToken();
+        print("Token autentikasi pengguna: $token");
+        return token;
+      } else {
+        print("Error: Tidak ada pengguna yang sedang login.");
+      }
+    } catch (e) {
+      print("Error saat mendapatkan token autentikasi: $e");
+    }
+    return null;
   }
 }

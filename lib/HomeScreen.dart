@@ -2,6 +2,7 @@ import 'package:chatify/ChatRoom.dart';
 import 'package:chatify/group_chats/group_chat_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -17,7 +18,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final TextEditingController _search = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String defaultProfilePic = 'https://example.com/default_profile_pic.png';
+  String defaultProfilePic = 'assets/default_profile_pic.png'; // Default image
 
   int _selectedIndex = 0;
 
@@ -26,6 +27,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     setStatus("Online");
+
+    // Adding foreground notification listener
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        _showNotificationDialog(
+            message.notification!.title, message.notification!.body);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   void setStatus(String status) async {
@@ -36,6 +51,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } catch (e) {
       print("Error setting status: $e");
     }
+  }
+
+  void _showNotificationDialog(String? title, String? body) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title ?? 'Notification'),
+        content: Text(body ?? 'No content'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -84,11 +115,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> logOut(BuildContext context) async {
     try {
       await _auth.signOut();
-      // Pastikan pengguna kembali ke layar login setelah logout
-      Navigator.of(context)
-          .pushReplacementNamed('/login'); // Sesuaikan dengan rute login Anda
+      Navigator.of(context).pushReplacementNamed('/login');
     } catch (e) {
-      print("Error logging out: $e"); // Menampilkan error di log
+      print("Error logging out: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text("Logout failed: ${e.toString()}. Please try again.")),
@@ -129,10 +158,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               );
             },
             leading: CircleAvatar(
-              backgroundImage: userMap!['profilePic'] != null
-                  ? NetworkImage(userMap!['profilePic'])
-                  : NetworkImage(defaultProfilePic),
-              child: userMap!['profilePic'] == null
+              backgroundImage: userMap!['profilePic'] != null &&
+                      userMap!['profilePic'].isNotEmpty
+                  ? NetworkImage(userMap![
+                      'profilePic']) // Use NetworkImage if profilePic exists
+                  : AssetImage('assets/default_profile_pic.png')
+                      as ImageProvider, // Default image if profilePic doesn't exist
+              child: userMap!['profilePic'] == null ||
+                      userMap!['profilePic'].isEmpty
                   ? Text(
                       userMap!['name'][0].toUpperCase(),
                       style: TextStyle(color: Colors.white, fontSize: 20),
@@ -164,14 +197,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
         Expanded(
           child: StreamBuilder<QuerySnapshot>(
-            stream: _auth.currentUser !=
-                    null // Cek apakah pengguna sedang login
+            stream: _auth.currentUser != null
                 ? _firestore
                     .collection('chatRooms')
                     .where('users', arrayContains: _auth.currentUser!.uid)
                     .orderBy('lastMessageTime', descending: true)
                     .snapshots()
-                : null, // Jika pengguna tidak login, StreamBuilder tidak akan menunggu stream Firestore
+                : null,
             builder: (context, snapshot) {
               if (_auth.currentUser == null) {
                 return Center(child: Text("Please log in to view chats"));
@@ -196,22 +228,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   Timestamp lastMessageTime =
                       chatRoomData['lastMessageTime'] ?? Timestamp.now();
 
-                  // Mendapatkan daftar pengguna dan memastikan ada lebih dari satu pengguna
                   List users = chatRoomData['users'] ?? [];
                   if (users.length < 2) {
-                    return SizedBox
-                        .shrink(); // Mengabaikan tampilan chat room ini
+                    return SizedBox.shrink();
                   }
 
-                  // Menemukan ID pengguna lain
                   String? otherUserId = users.firstWhere(
                     (id) => id != _auth.currentUser!.uid,
                     orElse: () => null,
                   );
 
                   if (otherUserId == null) {
-                    return SizedBox
-                        .shrink(); // Mengabaikan tampilan chat room ini
+                    return SizedBox.shrink();
                   }
 
                   return FutureBuilder<DocumentSnapshot>(
@@ -283,11 +311,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     var now = DateTime.now();
 
     if (now.difference(date).inDays == 0) {
-      return DateFormat.Hm().format(date); // Waktu dalam HH:mm jika hari ini
+      return DateFormat.Hm().format(date);
     } else if (now.difference(date).inDays == 1) {
-      return "Yesterday"; // Tampilkan 'Yesterday' jika kemarin
+      return "Yesterday";
     } else {
-      return DateFormat.yMMMd().format(date); // Tanggal singkat
+      return DateFormat.yMMMd().format(date);
     }
   }
 
