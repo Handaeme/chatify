@@ -44,3 +44,6 @@ app.*.map.json
 
 # .env file to store credentials safely
 .env
+
+# Ignore the chatify_key.json file located in the assets/config directory
+assets/config/chatify_key.json

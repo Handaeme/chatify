@@ -1,5 +1,6 @@
 import 'package:chatify/HomeScreen.dart';
-import 'package:chatify/Methods.dart';
+import 'package:chatify/Methods.dart'; // Import PushNotificationService
+import 'package:chatify/push_notification_service.dart';
 import 'package:flutter/material.dart';
 
 class CreateAccount extends StatefulWidget {
@@ -11,7 +12,7 @@ class _CreateAccountState extends State<CreateAccount> {
   final TextEditingController _name = TextEditingController();
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
-  bool isLoading = false;
+  bool isLoading = false; // Untuk menunjukkan status loading
 
   @override
   Widget build(BuildContext context) {
@@ -21,10 +22,12 @@ class _CreateAccountState extends State<CreateAccount> {
       body: isLoading
           ? Center(
               child: Container(
-              height: size.height / 20,
-              width: size.height / 20,
-              child: CircularProgressIndicator(),
-            ))
+                height: size.height / 20,
+                width: size.height / 20,
+                child:
+                    CircularProgressIndicator(), // Menampilkan loading saat pembuatan akun
+              ),
+            )
           : SingleChildScrollView(
               child: Column(
                 children: [
@@ -35,14 +38,13 @@ class _CreateAccountState extends State<CreateAccount> {
                     alignment: Alignment.centerLeft,
                     width: size.width / 1.0,
                     child: Padding(
-                      padding: const EdgeInsets.only(
-                          left: 8.0), // Tambahkan padding kiri
+                      padding: const EdgeInsets.only(left: 8.0),
                       child: Padding(
                         padding: EdgeInsets.only(left: 15),
                         child: IconButton(
                           icon: Icon(Icons.arrow_back_ios),
                           onPressed: () {
-                            Navigator.pop(context);
+                            Navigator.pop(context); // Navigasi kembali
                           },
                         ),
                       ),
@@ -98,11 +100,12 @@ class _CreateAccountState extends State<CreateAccount> {
                   SizedBox(
                     height: size.height / 20,
                   ),
-                  customButton(size),
+                  customButton(size), // Tombol untuk membuat akun
                   Padding(
                     padding: const EdgeInsets.all(20.0),
                     child: GestureDetector(
-                      onTap: () => Navigator.pop(context),
+                      onTap: () =>
+                          Navigator.pop(context), // Navigasi ke halaman login
                       child: Text(
                         "Login",
                         style: TextStyle(
@@ -126,20 +129,31 @@ class _CreateAccountState extends State<CreateAccount> {
             _email.text.isNotEmpty &&
             _password.text.isNotEmpty) {
           setState(() {
-            isLoading = true;
+            isLoading = true; // Tampilkan loading sebelum proses pembuatan akun
           });
 
           createAccount(_name.text, _email.text, _password.text).then((user) {
             if (user != null) {
               setState(() {
-                isLoading = false;
+                isLoading =
+                    false; // Sembunyikan loading setelah akun berhasil dibuat
               });
               print("Account created successfully");
+
+              // Ambil dan simpan token FCM setelah akun berhasil dibuat
+              saveFcmToken(user
+                  .uid); // Pastikan createAccount() mengembalikan user dengan UID
+
               Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => HomeScreen()));
+                context,
+                MaterialPageRoute(
+                    builder: (_) =>
+                        HomeScreen()), // Arahkan ke HomeScreen setelah sukses
+              );
             } else {
               setState(() {
-                isLoading = false;
+                isLoading =
+                    false; // Sembunyikan loading jika pembuatan akun gagal
               });
               print("Account creation failed");
             }
@@ -153,7 +167,8 @@ class _CreateAccountState extends State<CreateAccount> {
         width: size.width / 1.2,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(25), // Sesuaikan dengan login
+          borderRadius:
+              BorderRadius.circular(25), // Sesuaikan dengan desain login
           color: Color(0xFF0719B7), // Sesuaikan dengan warna login
         ),
         child: Text(
@@ -180,8 +195,7 @@ class _CreateAccountState extends State<CreateAccount> {
           hintText: hintText,
           hintStyle: TextStyle(color: Colors.grey),
           border: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(25), // Sesuaikan radius menjadi 25
+            borderRadius: BorderRadius.circular(25), // Sesuaikan dengan desain
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25),
@@ -194,5 +208,16 @@ class _CreateAccountState extends State<CreateAccount> {
         ),
       ),
     );
+  }
+
+  // Fungsi untuk menyimpan FCM Token ke Firestore setelah akun dibuat
+  Future<void> saveFcmToken(String userId) async {
+    String? token = await PushNotificationService().getFcmToken();
+    if (token != null) {
+      print("Saving FCM Token for user: $userId, token: $token");
+      await PushNotificationService().saveTokenToFirestore(userId);
+    } else {
+      print("FCM Token not found after account creation.");
+    }
   }
 }

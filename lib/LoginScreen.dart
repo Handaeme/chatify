@@ -2,6 +2,7 @@ import 'package:chatify/CreateAccount.dart';
 import 'package:chatify/HomeScreen.dart';
 import 'package:chatify/Methods.dart';
 import 'package:chatify/WelcomeScreen.dart';
+import 'package:chatify/push_notification_service.dart'; // Import PushNotificationService yang sesuai path
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,7 +14,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
-  bool isLoading = false;
+  bool isLoading = false; // Untuk menandakan status loading
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +26,8 @@ class _LoginScreenState extends State<LoginScreen> {
           true, // Agar layar menyesuaikan saat keyboard muncul
       body: isLoading
           ? Center(
-              child: CircularProgressIndicator(),
+              child:
+                  CircularProgressIndicator(), // Menampilkan loading saat proses login
             )
           : SingleChildScrollView(
               child: Column(
@@ -151,15 +153,21 @@ class _LoginScreenState extends State<LoginScreen> {
       onTap: () {
         if (_email.text.isNotEmpty && _password.text.isNotEmpty) {
           setState(() {
-            isLoading = true;
+            isLoading = true; // Set loading menjadi true saat login dimulai
           });
 
+          // Lakukan proses login
           loginAccount(_email.text, _password.text).then((user) {
             if (user != null) {
               print("Login Successful");
               setState(() {
-                isLoading = false;
+                isLoading = false; // Sembunyikan loading setelah login berhasil
               });
+
+              // Ambil dan simpan token FCM setelah login berhasil
+              saveFcmToken(user
+                  .uid); // Pastikan loginAccount() mengembalikan user dengan UID
+
               Navigator.push(
                 context,
                 PageRouteBuilder(
@@ -174,14 +182,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: child,
                     );
                   },
-                  transitionDuration: Duration(
-                      milliseconds: 200), // Durasi transisi lebih cepat
+                  transitionDuration: Duration(milliseconds: 200),
                 ),
               );
             } else {
               print("Login Failed");
               setState(() {
-                isLoading = false;
+                isLoading = false; // Sembunyikan loading jika login gagal
               });
             }
           });
@@ -189,7 +196,7 @@ class _LoginScreenState extends State<LoginScreen> {
           print("Please fill form correctly");
         }
       },
-      borderRadius: BorderRadius.circular(25), // Tambahkan radius border
+      borderRadius: BorderRadius.circular(25),
       child: Container(
         height: size.height / 16,
         width: size.width / 1.2,
@@ -239,5 +246,16 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  // Fungsi untuk menyimpan FCM Token ke Firestore setelah login
+  Future<void> saveFcmToken(String userId) async {
+    String? token = await PushNotificationService().getFcmToken();
+    if (token != null) {
+      print("Saving FCM Token for user: $userId, token: $token");
+      await PushNotificationService().saveTokenToFirestore(userId);
+    } else {
+      print("FCM Token not found after login.");
+    }
   }
 }
