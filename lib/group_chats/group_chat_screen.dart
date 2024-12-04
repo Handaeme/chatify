@@ -47,12 +47,12 @@ class _GroupChatHomeScreenState extends State<GroupChatHomeScreen> {
     final Size size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Color(0xFF0719B7), // Latar belakang biru tua
+      backgroundColor: Color(0xFF0A1233), // Latar belakang biru tua
       body: Container(
         width: 440,
         height: 845,
         decoration: ShapeDecoration(
-          color: Colors.white,
+          color: Color(0xFF0A1233),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(25),
@@ -63,7 +63,7 @@ class _GroupChatHomeScreenState extends State<GroupChatHomeScreen> {
         child: isLoading
             ? Center(
                 child: CircularProgressIndicator(
-                  color: Color(0xFF0719B7),
+                  color: Colors.red,
                 ),
               )
             : ListView.builder(
@@ -83,7 +83,7 @@ class _GroupChatHomeScreenState extends State<GroupChatHomeScreen> {
                       ),
                       leading: CircleAvatar(
                         radius: 30,
-                        backgroundColor: Color(0xFF0719B7),
+                        backgroundColor: Colors.red,
                         child: Icon(
                           Icons.group,
                           size: 30,
@@ -93,19 +93,22 @@ class _GroupChatHomeScreenState extends State<GroupChatHomeScreen> {
                       title: Text(
                         groupList[index]['name'],
                         style: TextStyle(
+                          fontFamily: 'JosefinSans',
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       ),
                       subtitle: Text(
                         "Tap to enter group",
-                        style: TextStyle(color: Colors.grey[600]),
+                        style: TextStyle(
+                            fontFamily: 'JosefinSans',
+                            color: Color(0xFF718096)),
                       ),
                       trailing: Icon(
                         Icons.arrow_forward_ios,
                         size: 20,
-                        color: Color(0xFF0719B7),
+                        color: Color(0xFF0A1233),
                       ),
                     ),
                   );
@@ -113,7 +116,7 @@ class _GroupChatHomeScreenState extends State<GroupChatHomeScreen> {
               ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Color(0xFF0719B7),
+        backgroundColor: Colors.red,
         child: Icon(Icons.create, color: Colors.white),
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(

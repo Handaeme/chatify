@@ -81,12 +81,13 @@ class _GroupInfoState extends State<GroupInfo> {
             context: context,
             builder: (context) {
               return AlertDialog(
-                backgroundColor: Color(0xFF0719B7),
+                backgroundColor: Color(0xFF0A1233),
                 content: ListTile(
                   onTap: () => removeMembers(index),
                   title: Text(
                     "Remove This Member",
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(
+                        fontFamily: 'JosefinSans', color: Colors.white),
                   ),
                 ),
               );
@@ -100,14 +101,11 @@ class _GroupInfoState extends State<GroupInfo> {
       isLoading = true;
     });
 
-    // Periksa apakah admin adalah satu-satunya anggota grup
     if (membersList.length == 1 &&
         membersList[0]['uid'] == _auth.currentUser!.uid) {
       try {
-        // Hapus dokumen grup dari Firestore
         await _firestore.collection('groups').doc(widget.groupId).delete();
 
-        // Hapus referensi grup dari koleksi 'groups' di pengguna admin
         await _firestore
             .collection('users')
             .doc(_auth.currentUser!.uid)
@@ -115,7 +113,6 @@ class _GroupInfoState extends State<GroupInfo> {
             .doc(widget.groupId)
             .delete();
 
-        // Navigasi kembali ke HomeScreen
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => HomeScreen()),
@@ -130,22 +127,18 @@ class _GroupInfoState extends State<GroupInfo> {
         });
       }
     } else {
-      // Hapus admin dari daftar anggota
       membersList
           .removeWhere((member) => member['uid'] == _auth.currentUser!.uid);
 
       if (checkAdmin() && membersList.isNotEmpty) {
-        // Tetapkan anggota pertama di daftar sebagai admin baru
         membersList[0]['isAdmin'] = true;
       }
 
       try {
-        // Perbarui daftar anggota di Firestore
         await _firestore.collection('groups').doc(widget.groupId).update({
           "members": membersList,
         });
 
-        // Hapus grup dari daftar grup pengguna
         await _firestore
             .collection('users')
             .doc(_auth.currentUser!.uid)
@@ -153,7 +146,6 @@ class _GroupInfoState extends State<GroupInfo> {
             .doc(widget.groupId)
             .delete();
 
-        // Navigasi kembali ke HomeScreen
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => HomeScreen()),
@@ -176,10 +168,11 @@ class _GroupInfoState extends State<GroupInfo> {
 
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Color(0xFF0719B7),
+        backgroundColor: Color(0xFF0A1233),
         appBar: AppBar(
-          backgroundColor: Color(0xFF0719B7),
-          title: Text("Group Info", style: TextStyle(color: Colors.white)),
+          backgroundColor: Color(0xFF0A1233),
+          title: Text("Group Info",
+              style: TextStyle(color: Colors.white, fontFamily: 'JosefinSans')),
           leading: BackButton(color: Colors.white),
         ),
         body: isLoading
@@ -188,172 +181,164 @@ class _GroupInfoState extends State<GroupInfo> {
                 width: size.width,
                 alignment: Alignment.center,
                 child: CircularProgressIndicator(
-                  color: Colors.white,
+                  color: Colors.red,
                 ),
               )
-            : Container(
-                width: size.width,
-                height: size.height,
-                decoration: ShapeDecoration(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(25),
-                      topRight: Radius.circular(25),
-                    ),
-                  ),
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        height: size.height / 8,
-                        width: size.width / 1.1,
-                        child: Row(
-                          children: [
-                            Container(
-                              height: size.height / 11,
-                              width: size.height / 11,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Color(0xFF0719B7),
-                              ),
-                              child: Icon(
-                                Icons.group,
-                                color: Colors.white,
-                                size: size.width / 10,
-                              ),
+            : SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      height: size.height / 8,
+                      width: size.width / 1.1,
+                      child: Row(
+                        children: [
+                          Container(
+                            height: size.height / 11,
+                            width: size.height / 11,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.red,
                             ),
-                            SizedBox(
-                              width: size.width / 20,
+                            child: Icon(
+                              Icons.group,
+                              color: Colors.white,
+                              size: size.width / 10,
                             ),
-                            Expanded(
-                              child: Text(
-                                widget.groupName,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: size.width / 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF0719B7),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        height: size.height / 20,
-                      ),
-                      Container(
-                        width: size.width / 1.1,
-                        child: Text(
-                          "${membersList.length} Members",
-                          style: TextStyle(
-                            fontSize: size.width / 20,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF0719B7),
                           ),
+                          SizedBox(
+                            width: size.width / 20,
+                          ),
+                          Expanded(
+                            child: Text(
+                              widget.groupName,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontFamily: 'JosefinSans',
+                                fontSize: size.width / 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      height: size.height / 20,
+                    ),
+                    Container(
+                      width: size.width / 1.1,
+                      child: Text(
+                        "${membersList.length} Members",
+                        style: TextStyle(
+                          fontFamily: 'JosefinSans',
+                          fontSize: size.width / 20,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
                         ),
                       ),
-                      SizedBox(
-                        height: size.height / 20,
-                      ),
-                      checkAdmin()
-                          ? ListTile(
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => AddMembersINGroup(
-                                    groupChatId: widget.groupId,
-                                    name: widget.groupName,
-                                    membersList: membersList,
-                                  ),
+                    ),
+                    SizedBox(
+                      height: size.height / 20,
+                    ),
+                    checkAdmin()
+                        ? ListTile(
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => AddMembersINGroup(
+                                  groupChatId: widget.groupId,
+                                  name: widget.groupName,
+                                  membersList: membersList,
                                 ),
                               ),
-                              leading:
-                                  Icon(Icons.add, color: Color(0xFF0719B7)),
-                              title: Text(
-                                "Add Members",
-                                style: TextStyle(
-                                  fontSize: size.width / 22,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF0719B7),
-                                ),
+                            ),
+                            leading: Icon(Icons.add, color: Colors.green),
+                            title: Text(
+                              "Add Members",
+                              style: TextStyle(
+                                fontFamily: 'JosefinSans',
+                                fontSize: size.width / 22,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
                               ),
-                            )
-                          : SizedBox(),
-                      Flexible(
-                        child: ListView.builder(
-                          itemCount: membersList.length,
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemBuilder: (context, index) {
-                            // Ambil nama dan buat inisial dari nama anggota
-                            String name =
-                                membersList[index]['name'] ?? 'No Name';
-                            String initials = name.isNotEmpty
-                                ? name
-                                    .trim()
-                                    .split(' ')
-                                    .map((e) => e[0])
-                                    .take(2)
-                                    .join()
-                                    .toUpperCase()
-                                : 'NN'; // Inisial default jika tidak ada nama
+                            ),
+                          )
+                        : SizedBox(),
+                    Flexible(
+                      child: ListView.builder(
+                        itemCount: membersList.length,
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          String name = membersList[index]['name'] ?? 'No Name';
+                          String initials = name.isNotEmpty
+                              ? name
+                                  .trim()
+                                  .split(' ')
+                                  .map((e) => e[0])
+                                  .take(2)
+                                  .join()
+                                  .toUpperCase()
+                              : 'NN';
 
-                            return ListTile(
-                              onTap: () => showDialogBox(index),
-                              leading: CircleAvatar(
-                                backgroundColor:
-                                    Colors.blue, // Warna latar belakang avatar
-                                child: Text(
-                                  initials, // Tampilkan inisial nama
-                                  style: TextStyle(
-                                    color: Colors.white, // Warna teks (inisial)
-                                    fontWeight:
-                                        FontWeight.bold, // Tebal inisial
-                                  ),
-                                ),
-                              ),
-                              title: Text(
-                                name,
+                          return ListTile(
+                            onTap: () => showDialogBox(index),
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.blue,
+                              child: Text(
+                                initials,
                                 style: TextStyle(
-                                  fontSize: size.width / 22,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xFF0719B7),
+                                  fontFamily: 'JosefinSans',
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              subtitle: Text(
-                                membersList[index]['email'] ?? 'No Email',
-                                style: TextStyle(color: Colors.grey),
+                            ),
+                            title: Text(
+                              name,
+                              style: TextStyle(
+                                fontFamily: 'JosefinSans',
+                                fontSize: size.width / 22,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
                               ),
-                              trailing: Text(
-                                (membersList[index]['isAdmin'] ?? false)
-                                    ? "Admin"
-                                    : "",
-                                style: TextStyle(color: Colors.green),
-                              ),
-                            );
-                          },
-                        ),
+                            ),
+                            subtitle: Text(
+                              membersList[index]['email'] ?? 'No Email',
+                              style: TextStyle(
+                                  fontFamily: 'JosefinSans-Regular',
+                                  color: Color(0xFF718096)),
+                            ),
+                            trailing: Text(
+                              (membersList[index]['isAdmin'] ?? false)
+                                  ? "Admin"
+                                  : "",
+                              style: TextStyle(
+                                  fontFamily: 'JosefinSans',
+                                  color: Color(0xFF718096)),
+                            ),
+                          );
+                        },
                       ),
-                      ListTile(
-                        onTap: onLeaveGroup,
-                        leading: Icon(
-                          Icons.logout,
+                    ),
+                    ListTile(
+                      onTap: onLeaveGroup,
+                      leading: Icon(
+                        Icons.logout,
+                        color: Colors.redAccent,
+                      ),
+                      title: Text(
+                        "Leave Group",
+                        style: TextStyle(
+                          fontFamily: 'JosefinSans',
+                          fontSize: size.width / 22,
+                          fontWeight: FontWeight.w500,
                           color: Colors.redAccent,
                         ),
-                        title: Text(
-                          "Leave Group",
-                          style: TextStyle(
-                            fontSize: size.width / 22,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.redAccent,
-                          ),
-                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
       ),

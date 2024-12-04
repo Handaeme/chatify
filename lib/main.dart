@@ -1,16 +1,16 @@
+import 'package:chatify/SplashScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
-import 'HomeScreen.dart'; // Import HomeScreen untuk daftar obrolan
-import 'LoginScreen.dart'; // Import LoginScreen untuk halaman login
-import 'push_notification_service.dart'; // Import PushNotificationService
+import 'HomeScreen.dart';
+import 'LoginScreen.dart';
+import 'push_notification_service.dart';
 
 // Handler untuk pesan background
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('Handling a background message: ${message.messageId}');
-  // Anda dapat menambahkan logika untuk menyimpan notifikasi ke local storage di sini jika diperlukan.
 }
 
 Future<void> main() async {
@@ -22,6 +22,7 @@ Future<void> main() async {
   PushNotificationService pushNotificationService = PushNotificationService();
   await pushNotificationService.initialize();
 
+  // Periksa apakah pengguna sudah login
   User? currentUser = FirebaseAuth.instance.currentUser;
 
   if (currentUser != null) {
@@ -46,8 +47,23 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute:
-          FirebaseAuth.instance.currentUser != null ? '/home' : '/login',
+      // Gunakan StreamBuilder untuk memantau status login pengguna
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+
+          // Jika user login, arahkan ke HomeScreen
+          if (snapshot.hasData) {
+            return HomeScreen();
+          }
+
+          // Jika user belum login, arahkan ke LoginScreen
+          return SplashScreen();
+        },
+      ),
       routes: {
         '/home': (context) => HomeScreen(),
         '/login': (context) => LoginScreen(),

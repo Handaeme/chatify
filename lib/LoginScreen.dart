@@ -2,7 +2,7 @@ import 'package:chatify/CreateAccount.dart';
 import 'package:chatify/HomeScreen.dart';
 import 'package:chatify/Methods.dart';
 import 'package:chatify/WelcomeScreen.dart';
-import 'package:chatify/push_notification_service.dart'; // Import PushNotificationService yang sesuai path
+import 'package:chatify/push_notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -14,7 +14,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
-  bool isLoading = false; // Untuk menandakan status loading
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +22,11 @@ class _LoginScreenState extends State<LoginScreen> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     return Scaffold(
-      resizeToAvoidBottomInset:
-          true, // Agar layar menyesuaikan saat keyboard muncul
+      backgroundColor: Color(0xFF0A1233),
+      resizeToAvoidBottomInset: true,
       body: isLoading
           ? Center(
-              child:
-                  CircularProgressIndicator(), // Menampilkan loading saat proses login
+              child: CircularProgressIndicator(),
             )
           : SingleChildScrollView(
               child: Column(
@@ -40,6 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       padding: const EdgeInsets.only(left: 15.0),
                       child: IconButton(
                         icon: Icon(Icons.arrow_back_ios),
+                        color: Colors.white,
                         onPressed: () {
                           Navigator.push(
                             context,
@@ -57,9 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   child: child,
                                 );
                               },
-                              transitionDuration: Duration(
-                                  milliseconds:
-                                      200), // Durasi transisi lebih cepat
+                              transitionDuration: Duration(milliseconds: 200),
                             ),
                           );
                         },
@@ -92,14 +90,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: child,
                           );
                         },
-                        transitionDuration: Duration(
-                            milliseconds: 200), // Durasi transisi lebih cepat
+                        transitionDuration: Duration(milliseconds: 200),
                       ),
                     ),
                     child: Text(
                       "Create Account",
                       style: TextStyle(
-                        color: Color(0xFF0719B7),
+                        fontFamily: 'JosefinSans',
+                        color: Color(0xFF718096),
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),
@@ -119,9 +117,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Text(
             "Hey,",
             style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.bold,
-            ),
+                fontFamily: 'JosefinSans',
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                color: Colors.white),
           ),
         ),
         Container(
@@ -129,9 +128,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Text(
             "Welcome",
             style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.bold,
-            ),
+                fontFamily: 'JosefinSans',
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                color: Colors.white),
           ),
         ),
         Container(
@@ -139,9 +139,10 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Text(
             "Back",
             style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.bold,
-            ),
+                fontFamily: 'JosefinSans',
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                color: Colors.white),
           ),
         ),
       ],
@@ -153,45 +154,11 @@ class _LoginScreenState extends State<LoginScreen> {
       onTap: () {
         if (_email.text.isNotEmpty && _password.text.isNotEmpty) {
           setState(() {
-            isLoading = true; // Set loading menjadi true saat login dimulai
+            isLoading = true; // Menyalakan loading saat proses dimulai
           });
 
-          // Lakukan proses login
-          loginAccount(_email.text, _password.text).then((user) {
-            if (user != null) {
-              print("Login Successful");
-              setState(() {
-                isLoading = false; // Sembunyikan loading setelah login berhasil
-              });
-
-              // Ambil dan simpan token FCM setelah login berhasil
-              saveFcmToken(user
-                  .uid); // Pastikan loginAccount() mengembalikan user dengan UID
-
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) =>
-                      HomeScreen(),
-                  transitionsBuilder:
-                      (context, animation, secondaryAnimation, child) {
-                    var fadeAnimation =
-                        Tween<double>(begin: 0.0, end: 1.0).animate(animation);
-                    return FadeTransition(
-                      opacity: fadeAnimation,
-                      child: child,
-                    );
-                  },
-                  transitionDuration: Duration(milliseconds: 200),
-                ),
-              );
-            } else {
-              print("Login Failed");
-              setState(() {
-                isLoading = false; // Sembunyikan loading jika login gagal
-              });
-            }
-          });
+          handleLogin(
+              _email.text, _password.text); // Panggil fungsi handleLogin()
         } else {
           print("Please fill form correctly");
         }
@@ -203,16 +170,22 @@ class _LoginScreenState extends State<LoginScreen> {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(25),
-          color: Color(0xFF0719B7),
+          color: Colors.red,
         ),
-        child: Text(
-          "Login",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        child: isLoading
+            ? CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              )
+            : Text(
+                "Login",
+                style: TextStyle(
+                  fontFamily: 'JosefinSans',
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
       ),
     );
   }
@@ -224,31 +197,85 @@ class _LoginScreenState extends State<LoginScreen> {
       width: size.width / 1.2,
       child: TextField(
         controller: cont,
-        textCapitalization:
-            TextCapitalization.none, // Agar tidak selalu huruf kapital
+        textCapitalization: TextCapitalization.none,
+        style: TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          prefixIcon: Icon(icon),
+          prefixIcon: Icon(
+            icon,
+            color: Color(0xFF718096),
+          ),
           hintText: hintText,
-          hintStyle: TextStyle(color: Colors.grey),
+          hintStyle: TextStyle(color: Color(0xFF718096)),
           border: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(25), // Mengubah radius menjadi 25
+            borderRadius: BorderRadius.circular(25),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(25), // Untuk border saat tidak fokus
-            borderSide: BorderSide(color: Colors.grey),
+            borderRadius: BorderRadius.circular(25),
+            borderSide: BorderSide(color: Color(0xFF718096)),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(25), // Untuk border saat fokus
+            borderRadius: BorderRadius.circular(25),
             borderSide: BorderSide(color: Color(0xFF0719B7)),
           ),
         ),
+        cursorColor: Colors.red,
       ),
     );
   }
 
-  // Fungsi untuk menyimpan FCM Token ke Firestore setelah login
+  // Fungsi untuk menangani login secara asynchronous
+  Future<void> handleLogin(String email, String password) async {
+    try {
+      var user = await loginAccount(email, password);
+      if (user != null) {
+        print("Login Successful");
+
+        // Menyimpan FCM token setelah login berhasil
+        await saveFcmToken(user.uid);
+
+        if (mounted) {
+          setState(() {
+            isLoading = false; // Mematikan loading setelah login berhasil
+          });
+
+          Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) =>
+                  HomeScreen(),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                var fadeAnimation =
+                    Tween<double>(begin: 0.0, end: 1.0).animate(animation);
+                return FadeTransition(
+                  opacity: fadeAnimation,
+                  child: child,
+                );
+              },
+              transitionDuration: Duration(milliseconds: 200),
+            ),
+          );
+        }
+      } else {
+        print("Login Failed");
+
+        if (mounted) {
+          setState(() {
+            isLoading = false;
+          });
+        }
+      }
+    } catch (error) {
+      print("Error during login: $error");
+
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
   Future<void> saveFcmToken(String userId) async {
     String? token = await PushNotificationService().getFcmToken();
     if (token != null) {

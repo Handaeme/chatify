@@ -110,126 +110,161 @@ class _AddMembersInGroupState extends State<AddMembersInGroup> {
     final Size size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Color(0xFF0719B7),
+      backgroundColor: Color(0xFF0A1233),
       appBar: AppBar(
-        title: Text("Add Members"),
-        backgroundColor: Color(0xFF0719B7),
+        title: Text(
+          "Add Members",
+          style: TextStyle(fontFamily: 'JosefinSans'),
+        ),
+        backgroundColor: Color(0xFF0A1233),
         foregroundColor: Colors.white,
       ),
-      body: Container(
-        width: size.width,
-        height: size.height,
-        decoration: ShapeDecoration(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(25),
-              topRight: Radius.circular(25),
-            ),
-          ),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: ListView.builder(
-                  itemCount: membersList.length,
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    return ListTile(
-                      onTap: () => onRemoveMembers(index),
-                      leading: CircleAvatar(
-                        backgroundColor: Color(0xFF0719B7),
-                        child: Text(
-                          getInitials(membersList[index]['name']),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: ListView.builder(
+                itemCount: membersList.length,
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    onTap: () => onRemoveMembers(index),
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.red,
+                      child: Text(
+                        getInitials(membersList[index]['name']),
+                        style: TextStyle(
+                          fontFamily: 'JosefinSans',
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      title: Text(
-                        membersList[index]['name'],
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Text(membersList[index]['email']),
-                      trailing: Icon(Icons.close, color: Colors.red),
-                    );
-                  },
-                ),
-              ),
-              SizedBox(
-                height: size.height / 20,
-              ),
-              Container(
-                height: size.height / 14,
-                width: size.width,
-                alignment: Alignment.center,
-                child: Container(
-                  height: size.height / 14,
-                  width: size.width / 1.15,
-                  child: TextField(
-                    controller: _search,
-                    decoration: InputDecoration(
-                      hintText: "Search by Email",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
+                    ),
+                    title: Text(
+                      membersList[index]['name'],
+                      style: TextStyle(
+                          fontFamily: 'JosefinSans',
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      membersList[index]['email'],
+                      style: TextStyle(
+                        fontFamily: 'JosefinSans',
+                        color: Color(0xFF718096),
                       ),
                     ),
+                    trailing: Icon(Icons.close, color: Colors.red),
+                  );
+                },
+              ),
+            ),
+            SizedBox(
+              height: size.height / 20,
+            ),
+            Container(
+              height: size.height / 14,
+              width: size.width,
+              alignment: Alignment.center,
+              child: Container(
+                height: size.height / 14,
+                width: size.width / 1.15,
+                child: TextField(
+                  controller: _search,
+                  decoration: InputDecoration(
+                    hintText: "Search by Email",
+                    hintStyle: TextStyle(
+                      fontFamily: 'JosefinSans',
+                      color: Color(0xFF718096),
+                      fontSize: 16,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                          color: Colors.red), // Set outline color here
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                          color: Colors.red), // Set focused outline color
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                          color: Colors.white), // Set enabled outline color
+                    ),
+                  ),
+                  style: TextStyle(
+                    fontFamily: 'JosefinSans',
+                    color: Colors.white, // Set the color of the input text here
+                    fontSize:
+                        16, // Optional: adjust the font size of the input text
                   ),
                 ),
               ),
-              SizedBox(
-                height: size.height / 50,
-              ),
-              isLoading
-                  ? Container(
-                      height: size.height / 12,
-                      width: size.height / 12,
-                      alignment: Alignment.center,
-                      child: CircularProgressIndicator(),
-                    )
-                  : ElevatedButton(
-                      onPressed: onSearch,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF0719B7),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 40,
-                          vertical: 15,
-                        ),
-                      ),
-                      child: Text(
-                        "Search",
-                        style: TextStyle(fontSize: 16, color: Colors.white),
+            ),
+            SizedBox(
+              height: size.height / 50,
+            ),
+            isLoading
+                ? Container(
+                    height: size.height / 12,
+                    width: size.height / 12,
+                    alignment: Alignment.center,
+                    child: CircularProgressIndicator(),
+                  )
+                : ElevatedButton(
+                    onPressed: onSearch,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 40,
+                        vertical: 15,
                       ),
                     ),
-              userMap != null
-                  ? ListTile(
-                      onTap: onResultTap,
-                      leading: CircleAvatar(
-                        backgroundColor: Color(0xFF0719B7),
-                        child: Text(
-                          getInitials(userMap!['name']),
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    child: Text(
+                      "Search",
+                      style: TextStyle(
+                          fontFamily: 'JosefinSans',
+                          fontSize: 16,
+                          color: Colors.white),
+                    ),
+                  ),
+            userMap != null
+                ? ListTile(
+                    onTap: onResultTap,
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.red,
+                      child: Text(
+                        getInitials(userMap!['name']),
+                        style: TextStyle(
+                          fontFamily: 'JosefinSans',
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      title: Text(userMap!['name']),
-                      subtitle: Text(userMap!['email']),
-                      trailing: Icon(Icons.add, color: Colors.green),
-                    )
-                  : SizedBox(),
-            ],
-          ),
+                    ),
+                    title: Text(
+                      userMap!['name'],
+                      style: TextStyle(
+                          fontFamily: 'JosefinSans', color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      userMap!['email'],
+                      style: TextStyle(
+                          fontFamily: 'JosefinSans', color: Color(0xFF718096)),
+                    ),
+                    trailing: Icon(Icons.add, color: Colors.green),
+                  )
+                : SizedBox(),
+          ],
         ),
       ),
       floatingActionButton: membersList.length >= 2
           ? FloatingActionButton(
-              backgroundColor: Color(0xFF0719B7),
+              backgroundColor: Colors.red,
               child: Icon(Icons.forward, color: Colors.white),
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(

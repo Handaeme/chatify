@@ -66,8 +66,18 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
     final Size size = MediaQuery.of(context).size;
 
     return Scaffold(
+      backgroundColor: Color(0xFF0A1233),
       appBar: AppBar(
-        title: Text("Add Members"),
+        backgroundColor: Color(0xFF0A1233),
+        title: Text(
+          "Add Members",
+          style: TextStyle(color: Colors.white, fontFamily: 'JosefinSans'),
+        ),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back,
+              color: Colors.white), // Change color of the back icon here
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -85,10 +95,22 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
                 width: size.width / 1.15,
                 child: TextField(
                   controller: _search,
+                  style: TextStyle(
+                    color: Colors.white, // Change the text color to white here
+                  ),
                   decoration: InputDecoration(
                     hintText: "Search",
+                    hintStyle: TextStyle(
+                        color: Color(0xFF718096), fontFamily: 'JosefinSans'),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                          color: Colors.red), // Set the border color here
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: BorderSide(
+                          color: Colors.red), // Set color when focused
                     ),
                   ),
                 ),
@@ -106,16 +128,33 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
                   )
                 : ElevatedButton(
                     onPressed: onSearch,
-                    child: Text("Search"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red, // Change this to red
+                    ),
+                    child: Text(
+                      "Search",
+                      style: TextStyle(
+                          color: Colors.white, fontFamily: 'JosefinSans'),
+                    ),
                   ),
             userMap != null
                 ? ListTile(
                     onTap: onAddMembers,
-                    leading: Icon(Icons.account_box),
-                    title: Text(userMap!['name']),
-                    subtitle: Text(userMap!['email']),
-                    trailing: Icon(Icons.add),
-                  )
+                    leading: Icon(
+                      Icons.account_box,
+                      color: Colors.white,
+                    ),
+                    title: Text(
+                      userMap!['name'],
+                      style: TextStyle(
+                          color: Colors.white, fontFamily: 'JosefinSans'),
+                    ),
+                    subtitle: Text(
+                      userMap!['email'],
+                      style: TextStyle(
+                          color: Color(0xFF718096), fontFamily: 'JosefinSans'),
+                    ),
+                    trailing: Icon(Icons.add, color: Colors.green))
                 : SizedBox(),
           ],
         ),

@@ -18,7 +18,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final TextEditingController _search = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String defaultProfilePic = 'assets/default_profile_pic.png'; // Default image
 
   int _selectedIndex = 0;
 
@@ -28,9 +27,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     setStatus("Online");
 
-    // Adding foreground notification listener
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       if (message.notification != null) {
+        // Jika perlu pemrosesan berat, pastikan dilakukan secara async
+        await Future.delayed(Duration(
+            milliseconds:
+                500)); // Simulasi penundaan ringan untuk menyeimbangkan
+
+        // Proses notifikasi dalam dialog
         _showNotificationDialog(
             message.notification!.title, message.notification!.body);
       }
@@ -54,19 +58,41 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _showNotificationDialog(String? title, String? body) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title ?? 'Notification'),
-        content: Text(body ?? 'No content'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Close'),
+    // Pastikan widget masih terpasang (mounted)
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Color(0xFF0A1233),
+          title: Text(
+            title ?? 'Notification',
+            style: TextStyle(
+              color: Colors.white,
+              fontFamily: 'JosefinSans',
+            ),
           ),
-        ],
-      ),
-    );
+          content: Text(
+            body ?? 'No content',
+            style: TextStyle(
+              color: Color(0xFF718096),
+              fontFamily: 'JosefinSans',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Close',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontFamily: 'JosefinSans',
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
@@ -85,8 +111,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   void onSearch() async {
     setState(() {
       isLoading = true;
-      userMap = null;
+      userMap = null; // Mengosongkan hasil pencarian sebelumnya
     });
+
+    // Pastikan ada input sebelum melakukan pencarian
+    if (_search.text.trim().isEmpty) {
+      setState(() {
+        isLoading = false;
+      });
+      return; // Keluarkan fungsi jika tidak ada input
+    }
 
     try {
       var value = await _firestore
@@ -99,9 +133,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       });
 
       if (value.docs.isNotEmpty) {
-        var foundUser = value.docs[0].data();
+        var foundUser = value.docs[0].data() as Map<String, dynamic>;
         setState(() {
           userMap = foundUser;
+        });
+      } else {
+        setState(() {
+          userMap = null; // Menangani ketika tidak ada hasil ditemukan
         });
       }
     } catch (e) {
@@ -114,13 +152,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   Future<void> logOut(BuildContext context) async {
     try {
+      // Menambahkan penundaan ringan untuk mencegah UI freeze
+      await Future.delayed(Duration(milliseconds: 100));
       await _auth.signOut();
       Navigator.of(context).pushReplacementNamed('/login');
+    } on FirebaseAuthException catch (e) {
+      print("FirebaseAuthError: ${e.message}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text("Logout failed: ${e.message ?? 'Unknown error'}")),
+      );
     } catch (e) {
       print("Error logging out: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text("Logout failed: ${e.toString()}. Please try again.")),
+        SnackBar(content: Text("Logout failed: ${e.toString()}")),
       );
     }
   }
@@ -160,10 +205,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             leading: CircleAvatar(
               backgroundImage: userMap!['profilePic'] != null &&
                       userMap!['profilePic'].isNotEmpty
-                  ? NetworkImage(userMap![
-                      'profilePic']) // Use NetworkImage if profilePic exists
-                  : AssetImage('assets/default_profile_pic.png')
-                      as ImageProvider, // Default image if profilePic doesn't exist
+                  ? NetworkImage(userMap!['profilePic'])
+                  : null,
               child: userMap!['profilePic'] == null ||
                       userMap!['profilePic'].isEmpty
                   ? Text(
@@ -175,26 +218,30 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             title: Text(
               userMap!['name'],
               style: TextStyle(
-                color: Colors.black,
+                color: Colors.white,
+                fontFamily: 'JosefinSans',
                 fontSize: 17,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            subtitle: Text(userMap!['email']),
-          ),
-        Padding(
-          padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              "Recent Chats",
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black),
+            subtitle: Text(
+              userMap!['email'],
+              style: TextStyle(fontFamily: 'JosefinSans', color: Colors.white),
             ),
           ),
-        ),
+        // Padding(
+        //   padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
+        //   child: Align(
+        //     alignment: Alignment.centerLeft,
+        //     child: Text(
+        //       "Recent Chats",
+        //       style: TextStyle(
+        //           fontSize: 18,
+        //           fontWeight: FontWeight.bold,
+        //           color: Colors.white),
+        //     ),
+        //   ),
+        // ),
         Expanded(
           child: StreamBuilder<QuerySnapshot>(
             stream: _auth.currentUser != null
@@ -254,9 +301,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
                       var userData =
                           userSnapshot.data!.data() as Map<String, dynamic>;
+
                       String name = userData['name'] ?? 'Unknown User';
-                      String photoUrl =
-                          userData['profilePic'] ?? defaultProfilePic;
+                      String? photoUrl = userData['profilePic'] ?? null;
 
                       return ListTile(
                         onTap: () {
@@ -274,25 +321,45 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                           );
                         },
                         leading: CircleAvatar(
-                          backgroundImage: photoUrl.isNotEmpty
-                              ? NetworkImage(photoUrl)
+                          backgroundImage:
+                              photoUrl != null && photoUrl.isNotEmpty
+                                  ? NetworkImage(photoUrl)
+                                  : null,
+                          backgroundColor: photoUrl == null || photoUrl.isEmpty
+                              ? Colors.red
                               : null,
-                          child: photoUrl.isEmpty
-                              ? Text(name[0].toUpperCase())
+                          child: photoUrl == null || photoUrl.isEmpty
+                              ? Text(
+                                  name[0].toUpperCase(),
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 20),
+                                )
                               : null,
                         ),
                         title: Text(
                           name,
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontFamily: 'JosefinSans',
+                          ),
                         ),
                         subtitle: Text(
                           lastMessage,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'JosefinSans',
+                            color: Colors.white,
+                          ),
                         ),
                         trailing: Text(
                           formatTimestamp(lastMessageTime),
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white,
+                            fontFamily: 'JosefinSans',
+                          ),
                         ),
                       );
                     },
@@ -301,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               );
             },
           ),
-        ),
+        )
       ],
     );
   }
@@ -322,11 +389,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF0719B7),
+      backgroundColor: Color(0xFF0A1233),
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text(_selectedIndex == 0 ? "Messages" : "Group Chats"),
-        backgroundColor: Color(0xFF0719B7),
+        title: Text(
+          _selectedIndex == 0 ? "Messages" : "Group Chats",
+          style: TextStyle(fontFamily: 'JosefinSans'),
+        ),
+        backgroundColor: Color(0xFF0A1233),
         foregroundColor: Colors.white,
         actions: [
           if (_isSearching && _selectedIndex == 0)
@@ -334,27 +404,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 8.0),
                 child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.3),
-                        spreadRadius: 2,
-                        blurRadius: 5,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
                   child: TextField(
                     controller: _search,
                     decoration: InputDecoration(
                       hintText: "Search by email",
-                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      hintStyle: TextStyle(
+                          color: Colors.grey[400], fontFamily: 'JosefinSans'),
                       border: InputBorder.none,
-                      prefixIcon: Icon(Icons.search, color: Colors.grey[600]),
+                      prefixIcon: Icon(Icons.search, color: Colors.white),
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                     ),
-                    style: TextStyle(color: Colors.black),
+                    style: TextStyle(
+                        color: Colors.white, fontFamily: 'JosefinSans'),
                     onSubmitted: (value) => onSearch(),
                   ),
                 ),
@@ -380,48 +442,44 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
         ],
       ),
-      body: Container(
-        width: double.infinity,
-        decoration: ShapeDecoration(
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(25),
-              topRight: Radius.circular(25),
-            ),
+      body: Column(
+        children: [
+          Expanded(
+            child: _renderPage(),
           ),
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: _renderPage(),
+          BottomNavigationBar(
+            currentIndex: _selectedIndex,
+            onTap: (index) {
+              setState(() {
+                _selectedIndex = index;
+                if (_selectedIndex == 1) {
+                  _isSearching = false;
+                }
+              });
+            },
+            backgroundColor: Color(0xFF0A1233),
+            selectedItemColor: Colors.red,
+            unselectedItemColor: Colors.grey,
+            selectedLabelStyle: TextStyle(
+              fontFamily: 'JosefinSans',
+              fontWeight: FontWeight.bold,
             ),
-            BottomNavigationBar(
-              currentIndex: _selectedIndex,
-              onTap: (index) {
-                setState(() {
-                  _selectedIndex = index;
-                  if (_selectedIndex == 1) {
-                    _isSearching = false;
-                  }
-                });
-              },
-              backgroundColor: Colors.white,
-              selectedItemColor: Color(0xFF0719B7),
-              unselectedItemColor: Colors.grey,
-              items: [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.group),
-                  label: 'Group Chat',
-                ),
-              ],
+            unselectedLabelStyle: TextStyle(
+              fontFamily: 'JosefinSans',
+              fontWeight: FontWeight.normal,
             ),
-          ],
-        ),
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.home),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.group),
+                label: 'Group Chat',
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

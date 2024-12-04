@@ -34,8 +34,8 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  firebase_core: ^3.6.0
-  firebase_auth: ^5.3.1
+  firebase_core: ^3.8.0
+  firebase_auth: ^5.3.3
   cloud_firestore: ^5.4.4
   image_picker: ^1.1.2
   firebase_storage: ^12.3.2
@@ -50,6 +50,7 @@ dependencies:
   googleapis: ^13.2.0
   provider: ^6.1.2
   flutter_dotenv: ^5.2.1
+  firebase_analytics: ^11.3.5
 
 dev_dependencies:
   flutter_test:
@@ -76,8 +77,12 @@ flutter:
   assets:
     - assets/images/logo_welcome.jpg
     - assets/images/logo_welcome2.png
-    - assets/images/default_profile_pic.jpg
+    # - assets/default_profile_pic.png
     - assets/config/chatify_key.json
+    - assets/images/logo_welcome3.jpg
+    - assets/fonts/JosefinSans-Bold.ttf
+    - assets/fonts/JosefinSans-Bold.ttf
+    - assets/images/logo_welcome4.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -90,7 +95,12 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
+  fonts:
+    - family: JosefinSans
+      fonts:
+        - asset: assets/fonts/JosefinSans-Regular.ttf
+        - asset: assets/fonts/JosefinSans-Bold.ttf
+          weight: 700
   #   - family: Schyler
   #     fonts:
   #       - asset: fonts/Schyler-Regular.ttf

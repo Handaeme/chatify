@@ -29,7 +29,6 @@ class _ChatRoomState extends State<ChatRoom> {
   File? imageFile;
   bool isUploading = false;
 
-  // Memilih gambar dari galeri
   Future<void> getImage() async {
     ImagePicker _picker = ImagePicker();
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -42,7 +41,6 @@ class _ChatRoomState extends State<ChatRoom> {
     }
   }
 
-  // Mengunggah gambar ke Firebase Storage
   Future<void> uploadImage() async {
     if (imageFile == null || !imageFile!.existsSync()) {
       print("File gambar tidak ditemukan.");
@@ -92,7 +90,6 @@ class _ChatRoomState extends State<ChatRoom> {
     }
   }
 
-  // Mengirim pesan teks
   Future<void> onSendMessage() async {
     if (_message.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -110,7 +107,7 @@ class _ChatRoomState extends State<ChatRoom> {
         "time": FieldValue.serverTimestamp(),
       };
 
-      _message.clear(); // Bersihkan input field setelah teks diambil
+      _message.clear();
 
       await _firestore
           .collection('chatRooms')
@@ -136,7 +133,6 @@ class _ChatRoomState extends State<ChatRoom> {
     }
   }
 
-  // Memperbarui pesan terakhir di chatroom
   Future<void> updateLastMessage(String messageText) async {
     final chatRoomRef =
         _firestore.collection('chatRooms').doc(widget.chatRoomId);
@@ -162,9 +158,11 @@ class _ChatRoomState extends State<ChatRoom> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final Color primaryColor = Color(0xFF0719B7);
+    final Color primaryColor = Color(0xFF0A1233); // Primary Color
+    final Color secondaryColor = Color(0xFF718096); // Secondary Color
 
     return Scaffold(
+      backgroundColor: Color(0xFF0A1233),
       appBar: AppBar(
         iconTheme: IconThemeData(color: Colors.white),
         title: StreamBuilder<DocumentSnapshot>(
@@ -183,8 +181,10 @@ class _ChatRoomState extends State<ChatRoom> {
                   CircleAvatar(
                     child: Text(initials,
                         style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold)),
-                    backgroundColor: Colors.pink,
+                            fontFamily: 'JosefinSans',
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold)),
+                    backgroundColor: Colors.red,
                   ),
                   SizedBox(width: 10),
                   Column(
@@ -196,15 +196,18 @@ class _ChatRoomState extends State<ChatRoom> {
                               fontWeight: FontWeight.bold,
                               fontSize: 20)),
                       Text(userData['status'] ?? 'Offline',
-                          style:
-                              TextStyle(fontSize: 14, color: Colors.white70)),
+                          style: TextStyle(
+                              fontFamily: 'JosefinSans',
+                              fontSize: 14,
+                              color: Colors.white70)),
                     ],
                   ),
                 ],
               );
             } else {
               return Text(widget.userMap['name'] ?? 'Unknown User',
-                  style: TextStyle(color: Colors.white));
+                  style: TextStyle(
+                      fontFamily: 'JosefinSans', color: Colors.white));
             }
           },
         ),
@@ -224,7 +227,9 @@ class _ChatRoomState extends State<ChatRoom> {
                   AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.hasData) {
                   if (snapshot.data!.docs.isEmpty) {
-                    return Center(child: Text("No chat available"));
+                    return Center(
+                        child: Text("No chat available",
+                            style: TextStyle(fontFamily: 'JosefinSans')));
                   }
                   WidgetsBinding.instance
                       .addPostFrameCallback((_) => _scrollToBottom());
@@ -258,7 +263,7 @@ class _ChatRoomState extends State<ChatRoom> {
                     padding: EdgeInsets.symmetric(horizontal: 8),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(30),
-                      color: Colors.white,
+                      color: Color(0xFF718096),
                       boxShadow: [
                         BoxShadow(
                             color: Colors.black26,
@@ -273,17 +278,21 @@ class _ChatRoomState extends State<ChatRoom> {
                             controller: _message,
                             decoration: InputDecoration(
                               hintText: "Send Message",
+                              hintStyle: TextStyle(
+                                  fontFamily: 'JosefinSans',
+                                  color: Color.fromARGB(255, 188, 188, 188)),
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 14),
                             ),
-                            autocorrect: false, // Menambahkan properti ini
+                            style: TextStyle(color: Colors.white),
+                            autocorrect: false,
                             textInputAction: TextInputAction.send,
                             onSubmitted: (_) => onSendMessage(),
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.photo, color: primaryColor),
+                          icon: Icon(Icons.photo, color: Colors.white),
                           onPressed: getImage,
                         ),
                       ],
@@ -293,14 +302,8 @@ class _ChatRoomState extends State<ChatRoom> {
                 SizedBox(width: 8),
                 Container(
                   decoration: BoxDecoration(
-                    color: primaryColor,
+                    color: Colors.red,
                     shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 6,
-                          offset: Offset(0, 2)),
-                    ],
                   ),
                   child: IconButton(
                     icon: Icon(Icons.send, color: Colors.white),
@@ -328,17 +331,17 @@ class _ChatRoomState extends State<ChatRoom> {
                   padding: EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   decoration: BoxDecoration(
                     color: map['sendby'] == _auth.currentUser!.uid
-                        ? Color(0xFF0719B7)
-                        : Colors.grey.shade200,
+                        ? Colors.red
+                        : Color(0xFF718096),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     map['message'] ?? '',
                     style: TextStyle(
-                      color: map['sendby'] == _auth.currentUser!.uid
-                          ? Colors.white
-                          : Colors.black,
-                    ),
+                        color: map['sendby'] == _auth.currentUser!.uid
+                            ? Colors.white
+                            : Colors.white,
+                        fontFamily: 'JosefinSans'),
                   ),
                 )
               : Container(

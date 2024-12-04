@@ -27,7 +27,6 @@ class _GroupChatRoomState extends State<GroupChatRoom> {
   bool isUploading = false;
   final ImagePicker _picker = ImagePicker();
 
-  // Function to send text messages
   void onSendMessage() async {
     if (_message.text.isNotEmpty) {
       Map<String, dynamic> chatData = {
@@ -45,7 +44,6 @@ class _GroupChatRoomState extends State<GroupChatRoom> {
           .collection('chats')
           .add(chatData);
 
-      // Update last message
       await _firestore.collection('groups').doc(widget.groupChatId).update({
         'lastMessage': _message.text,
         'lastMessageSender': _auth.currentUser!.displayName,
@@ -54,19 +52,17 @@ class _GroupChatRoomState extends State<GroupChatRoom> {
     }
   }
 
-  // Function to select image from gallery
   Future pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
-        isUploading = true; // Show uploading indicator
+        isUploading = true;
       });
       uploadImage();
     }
   }
 
-  // Function to upload image to Firebase Storage
   Future uploadImage() async {
     if (_imageFile != null) {
       String fileName = DateTime.now().millisecondsSinceEpoch.toString();
@@ -83,13 +79,12 @@ class _GroupChatRoomState extends State<GroupChatRoom> {
         print("Error uploading image: $error");
       } finally {
         setState(() {
-          isUploading = false; // Hide uploading indicator
+          isUploading = false;
         });
       }
     }
   }
 
-  // Function to send image message
   void sendImageMessage(String imageUrl) async {
     Map<String, dynamic> chatData = {
       "sendBy": _auth.currentUser!.displayName,
@@ -115,12 +110,14 @@ class _GroupChatRoomState extends State<GroupChatRoom> {
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
-    final Color primaryColor = Color(0xFF0719B7);
+    final Color primaryColor = Color(0xFF0A1233);
     final Color secunderColor = Colors.white;
 
     return Scaffold(
+      backgroundColor: Color(0xFF0A1233),
       appBar: AppBar(
-        title: Text(widget.groupName),
+        title:
+            Text(widget.groupName, style: TextStyle(fontFamily: 'JosefinSans')),
         backgroundColor: primaryColor,
         foregroundColor: secunderColor,
         actions: [
@@ -150,7 +147,9 @@ class _GroupChatRoomState extends State<GroupChatRoom> {
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   if (snapshot.data!.docs.isEmpty) {
-                    return Center(child: Text("No chats available"));
+                    return Center(
+                        child: Text("No chats available",
+                            style: TextStyle(fontFamily: 'JosefinSans')));
                   }
                   return ListView.builder(
                     itemCount: snapshot.data!.docs.length,
@@ -182,7 +181,7 @@ class _GroupChatRoomState extends State<GroupChatRoom> {
                     decoration: BoxDecoration(
                       borderRadius:
                           BorderRadius.circular(30), // Floating effect
-                      color: Colors.white,
+                      color: Color(0xFF718096),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black26,
@@ -198,28 +197,33 @@ class _GroupChatRoomState extends State<GroupChatRoom> {
                             controller: _message,
                             decoration: InputDecoration(
                               hintText: "Send Message",
+                              hintStyle: TextStyle(
+                                  fontFamily: 'JosefinSans',
+                                  color:
+                                      const Color.fromARGB(255, 188, 188, 188)),
                               border: InputBorder.none, // No border
                               contentPadding: EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 14),
                             ),
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.photo, color: primaryColor),
+                          icon: Icon(Icons.photo, color: Colors.white),
                           onPressed: pickImage,
                         ),
                       ],
                     ),
                   ),
                 ),
-                SizedBox(width: 8), // Space between textfield and send button
+                SizedBox(width: 8),
                 Container(
                   decoration: BoxDecoration(
-                    color: primaryColor, // Background color
-                    shape: BoxShape.circle, // Circular button
+                    color: Colors.red,
+                    shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black26, // Shadow for floating effect
+                        color: Colors.black26,
                         blurRadius: 6,
                         offset: Offset(0, 2),
                       ),
@@ -251,11 +255,12 @@ class _GroupChatRoomState extends State<GroupChatRoom> {
               margin: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(15),
-                color: isMe ? Color(0xFF0719B7) : Colors.grey[300],
+                color: isMe ? Colors.red : Colors.grey[300],
               ),
               child: Text(
                 chatMap['message'],
                 style: TextStyle(
+                  fontFamily: 'JosefinSans',
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
                   color: isMe ? Colors.white : Colors.black,

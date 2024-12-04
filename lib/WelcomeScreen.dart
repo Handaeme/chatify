@@ -8,7 +8,7 @@ class WelcomeScreen extends StatelessWidget {
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 255, 255, 255), // Background putih
+      backgroundColor: Color(0xFF0A1233),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -16,18 +16,25 @@ class WelcomeScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Menambahkan gambar di sini
-                Image.asset(
-                    'assets/images/logo_welcome2.png', // Ganti dengan path aset gambar Anda
-                    height: 300, // Tinggi gambar
-                    width: 300,
-                    fit: BoxFit.cover // Menjaga proporsi gambar
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    ClipRRect(
+                      child: Image.asset(
+                        'assets/images/logo_welcome4.png',
+                        height: 450,
+                        width: 410,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                const SizedBox(height: 20), // Spasi antara gambar dan teks
+                  ],
+                ),
+                const SizedBox(height: 20),
                 const Text(
                   "Chatify",
                   style: TextStyle(
-                    color: Color(0xFF0719B7), // Warna teks biru
+                    fontFamily: 'JosefinSans',
+                    color: Colors.red,
                     fontSize: 35,
                     fontWeight: FontWeight.bold,
                   ),
@@ -37,8 +44,8 @@ class WelcomeScreen extends StatelessWidget {
                   "Lorem Ipsum is simply dummy text of the\nprinting and typesetting industry.",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Color.fromARGB(
-                        255, 80, 80, 80), // Warna teks sedikit abu-abu
+                    fontFamily: 'JosefinSans',
+                    color: Color(0xFF718096),
                     fontSize: 14,
                   ),
                 ),
@@ -47,22 +54,19 @@ class WelcomeScreen extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 35.0), // Padding kiri-kanan
+            padding: const EdgeInsets.symmetric(horizontal: 35.0),
             child: Container(
-              height: 55,
+              height: 50,
               decoration: BoxDecoration(
-                color: const Color.fromARGB(
-                    255, 223, 223, 223), // Warna latar belakang abu-abu gelap
-                borderRadius: BorderRadius.circular(30), // Membulatkan tombol
+                color: Color(0xFF718096),
+                borderRadius: BorderRadius.circular(40),
               ),
               child: Row(
                 children: [
-                  // Tombol Login (putih dengan teks hitam)
                   Expanded(
                     child: AnimatedButton(
                       text: "Login",
-                      backgroundColor: Color(0xFF0719B7),
+                      backgroundColor: Colors.red,
                       textColor: Color.fromARGB(255, 255, 255, 255),
                       onTap: () {
                         Navigator.push(
@@ -86,8 +90,8 @@ class WelcomeScreen extends StatelessWidget {
                   Expanded(
                     child: AnimatedButton(
                       text: "Sign up",
-                      backgroundColor: const Color.fromARGB(255, 223, 223, 223),
-                      textColor: Color.fromARGB(255, 0, 0, 0),
+                      backgroundColor: Color(0xFF718096),
+                      textColor: Colors.white,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -108,8 +112,8 @@ class WelcomeScreen extends StatelessWidget {
                       borderRadius: BorderRadius.only(
                         topRight: Radius.circular(30),
                         bottomRight: Radius.circular(30),
-                        topLeft: Radius.zero, // Menghilangkan radius kiri
-                        bottomLeft: Radius.zero, // Menghilangkan radius kiri
+                        topLeft: Radius.zero,
+                        bottomLeft: Radius.zero,
                       ),
                     ),
                   ),
@@ -124,13 +128,12 @@ class WelcomeScreen extends StatelessWidget {
   }
 }
 
-// Widget custom untuk tombol dengan animasi scale saat ditekan
 class AnimatedButton extends StatefulWidget {
   final String text;
   final VoidCallback onTap;
   final Color backgroundColor;
   final Color textColor;
-  final BorderRadius? borderRadius; // Allowing custom border radius
+  final BorderRadius? borderRadius;
 
   const AnimatedButton({
     Key? key,
@@ -138,7 +141,7 @@ class AnimatedButton extends StatefulWidget {
     required this.onTap,
     required this.backgroundColor,
     required this.textColor,
-    this.borderRadius, // Optional border radius for custom shapes
+    this.borderRadius,
   }) : super(key: key);
 
   @override
@@ -165,21 +168,21 @@ class _AnimatedButtonState extends State<AnimatedButton>
 
   @override
   void dispose() {
-    _controller.dispose(); // Dispose the controller to avoid memory leaks
+    _controller.dispose();
     super.dispose();
   }
 
   void _onTapDown(TapDownDetails details) {
     _controller.forward();
     setState(() {
-      _scale = 0.9; // Scale down effect when pressed
+      _scale = 0.9;
     });
   }
 
   void _onTapUp(TapUpDetails details) {
     _controller.reverse();
     setState(() {
-      _scale = 1.0; // Scale back to normal
+      _scale = 1.0;
     });
   }
 
@@ -201,13 +204,12 @@ class _AnimatedButtonState extends State<AnimatedButton>
           padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
           decoration: BoxDecoration(
             color: widget.backgroundColor,
-            borderRadius: widget.borderRadius ??
-                BorderRadius.circular(
-                    50), // Membulatkan tombol atau custom radius
+            borderRadius: widget.borderRadius ?? BorderRadius.circular(50),
           ),
           child: Text(
             widget.text,
             style: TextStyle(
+              fontFamily: 'JosefinSans',
               color: widget.textColor,
               fontSize: 16,
               fontWeight: FontWeight.bold,
